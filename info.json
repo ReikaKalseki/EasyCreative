@@ -1,0 +1,11 @@
+{
+  "name": "EasyCreative",
+  "version": "0.0.1",
+  "title": "EasyCreative",
+  "author": "Reika",
+  "contact": "",
+  "homepage": "",
+  "factorio_version" : "0.16",
+  "description": "Makes cheat_mode more like Minecraft Creative Mode, to make testing builds easier.",
+  "dependencies": ["base >= 0.16.0"]
+}
