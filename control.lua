@@ -68,7 +68,9 @@ script.on_event(defines.events.on_tick, function(event)
 	
 	if #game.players > 0 then
 		local player = game.players[math.random(1, #game.players)]
-		convertGhostsNear(player)
+		if player.cheat_mode then
+			convertGhostsNear(player)
+		end
 	end
 end)
 
@@ -97,10 +99,12 @@ script.on_event(defines.events.on_marked_for_deconstruction, function(event)
 	local entity = event.entity
 	if event.player_index then
 		local player = game.players[event.player_index]
-		local items = entity.prototype.mineable_properties.products and entity.prototype.mineable_properties.products or {}
-		for _,item in pairs(items) do
-			if item.type ~= "fluid" and player.get_item_count(item.name) == 0 then
-				player.insert({name = item.name, count = 1})
+		if player.cheat_mode then
+			local items = entity.prototype.mineable_properties.products and entity.prototype.mineable_properties.products or {}
+			for _,item in pairs(items) do
+				if item.type ~= "fluid" and player.get_item_count(item.name) == 0 then
+					player.insert({name = item.name, count = 1})
+				end
 			end
 		end
 	end
@@ -110,22 +114,26 @@ end)
 script.on_event(defines.events.on_built_entity, function(event)
 	local entity = event.created_entity
 	local player = game.players[event.player_index]
-	if entity.type == "entity-ghost" then
-		convertGhostToRealEntity(player, entity)
-	elseif entity.type == "tile-ghost" then
-		entity.revive()
-	elseif event.stack then --is nil for blueprints
-		player.insert({name = event.stack.name, count = 1})
+	if player.cheat_mode then
+		if entity.type == "entity-ghost" then
+			convertGhostToRealEntity(player, entity)
+		elseif entity.type == "tile-ghost" then
+			entity.revive()
+		elseif event.stack then --is nil for blueprints
+			player.insert({name = event.stack.name, count = 1})
+		end
 	end
 end)
 
 script.on_event(defines.events.on_player_mined_entity, function(event)
 	local entity = event.entity
 	local player = game.players[event.player_index]
-	for i = 1,#event.buffer do
-		local item = event.buffer[i]
-		if player.get_item_count(item.name) > 0 then
-			event.buffer.remove({name = item.name, count = item.count})
+	if player.cheat_mode then
+		for i = 1,#event.buffer do
+			local item = event.buffer[i]
+			if player.get_item_count(item.name) > 0 then
+				event.buffer.remove({name = item.name, count = item.count})
+			end
 		end
 	end
 end)
