@@ -43,7 +43,7 @@ local function preparePlayers()
 		initPlayer(player)
 	end
 	for _,force in pairs(game.forces) do
-		initForce(force)
+		initForce(force, true)
 	end
 end
 
@@ -86,7 +86,7 @@ script.on_event(defines.events.on_console_command, function(event)
 	if event.command == "c" and event.player_index and string.find(event.parameters, "initPlayer") then
 		game.print("EasyCreative: Initializing creative mode for player " .. game.players[event.player_index].name)
 		initPlayer(game.players[event.player_index])
-		initForce(game.players[event.player_index].force)
+		initForce(game.players[event.player_index].force, true)
 	end
 end)
 
@@ -108,6 +108,7 @@ script.on_event(defines.events.on_marked_for_deconstruction, function(event)
 			end
 		end
 	end
+	script.raise_event(defines.events.on_pre_player_mined_item, {entity=entity, player_index=event.player_index, tick=game.tick, name="on_pre_player_mined_item", creative=true, buffer = {}})
 	entity.destroy()
 end)
 
@@ -127,8 +128,8 @@ end)
 
 script.on_event(defines.events.on_player_mined_entity, function(event)
 	local entity = event.entity
-	local player = game.players[event.player_index]
-	if player.cheat_mode then
+	local player = event.player_index and game.players[event.player_index] or nil
+	if player and player.cheat_mode then
 		for i = 1,#event.buffer do
 			local item = event.buffer[i]
 			if player.get_item_count(item.name) > 0 then
@@ -136,4 +137,8 @@ script.on_event(defines.events.on_player_mined_entity, function(event)
 			end
 		end
 	end
+end)
+
+script.on_event(defines.events.on_technology_effects_reset, function(event)
+	initForce(event.force)
 end)

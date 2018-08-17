@@ -7,11 +7,13 @@ function initPlayer(player)
 	player.insert({name = "power-armor-mk2", count = 1})
 end
 
-function initForce(force)
-	force.research_all_technologies()
-	local r = Config.radius
-	force.chart(game.surfaces.nauvis, {{-r, -r}, {r, r}})
-	force.reset_technology_effects()
+function initForce(force, full)
+	if full then
+		force.research_all_technologies()
+		local r = Config.radius
+		force.chart(game.surfaces.nauvis, {{-r, -r}, {r, r}})
+		force.reset_technology_effects()
+	end
 	force.manual_crafting_speed_modifier = force.manual_crafting_speed_modifier+100
 	force.manual_mining_speed_modifier = force.manual_mining_speed_modifier+2.5
 	force.character_running_speed_modifier = force.character_running_speed_modifier+2
