@@ -22,6 +22,7 @@ function initForce(force, full)
 	force.character_reach_distance_bonus = force.character_reach_distance_bonus+20
 	force.character_build_distance_bonus = force.character_build_distance_bonus+20
 	force.character_build_distance_bonus = force.character_build_distance_bonus+20
+	force.laboratory_speed_modifier = force.laboratory_speed_modifier*10
 end
 
 function convertGhostToRealEntity(player, ghost)
@@ -36,4 +37,19 @@ function convertGhostToRealEntity(player, ghost)
 		script.raise_event(defines.events.on_put_item, {position=repl.position, player_index=player.index, shift_build=false, built_by_moving=false, direction=repl.direction, revive=true})
 		script.raise_event(defines.events.on_built_entity, {created_entity=repl, player_index=player.index, tick=game.tick, name="on_built_entity", revive=true})
 	end
+end
+
+function getRefilledItem(entity)
+	if entity.fluidbox and #entity.fluidbox > 0 and entity.fluidbox[1] then
+		return {type = "fluidbox", name = entity.fluidbox[1].name, display = "fluid: " .. entity.fluidbox[1].name}
+	end
+	local inv = entity.get_inventory(defines.inventory.cargo_wagon)
+	if inv then
+		for i = 1,#inv do
+			if inv[i] and inv[i].valid_for_read then
+				return {type = "item", name = inv[i].name, display = "item: " .. inv[i].name}
+			end
+		end
+	end
+	return nil
 end

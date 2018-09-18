@@ -5,21 +5,13 @@ function initGlobal(force)
 	if not global.creative then
 		global.creative = {}
 	end
+	
+	if not global.creative.cachedRefills then
+		global.creative.cachedRefills = {}
+	end
 end
 
 initGlobal(false)
-
-script.on_load(function()
-	
-end)
-
-script.on_init(function()
-	initGlobal(true)
-end)
-
-script.on_configuration_changed(function()
-	initGlobal(true)
-end)
 
 local function prepareTerrain()
 	local r = Config.radius
@@ -36,6 +28,11 @@ local function prepareTerrain()
 		end
 	end
 	game.surfaces[1].set_tiles(tiles)
+	
+	for _,force in pairs(game.forces) do
+		local r = Config.radius
+		force.chart(game.surfaces.nauvis, {{-r, -r}, {r, r}})
+	end
 end
 
 local function preparePlayers()	
@@ -52,28 +49,48 @@ local function initMap()
 	preparePlayers()
 end
 
-local function convertGhostsNear(player)
-	local ghosts = player.surface.find_entities_filtered{type = {"entity-ghost", "tile-ghost"}, area = box}
-	for _,entity in pairs(ghosts) do
-		if entity.type == "entity-ghost" then
-			convertGhostToRealEntity(player, entity)
-		elseif entity.type == "tile-ghost" then
-			entity.revive()
+script.on_load(function()
+	commands.add_command("initCreative", {"cmd.init-creative-help"}, function(event)
+		if game.players[event.player_index].admin then
+			game.print("EasyCreative: Initializing creative mode.")
+			initMap()
 		end
-	end
-end
-
-script.on_event(defines.events.on_tick, function(event)
-	if event.tick%20 ~= 0 then return end
+	end)
 	
-	if #game.players > 0 then
-		local player = game.players[math.random(1, #game.players)]
-		if player.cheat_mode then
-			convertGhostsNear(player)
+	commands.add_command("initMap", {"cmd.init-map-help"}, function(event)
+		if game.players[event.player_index].admin then
+			game.print("EasyCreative: Preparing creative terrain.")
+			prepareTerrain()
 		end
-	end
+	end)
+	
+	commands.add_command("initPlayer", {"cmd.init-player-help"}, function(event)
+		if game.players[event.player_index].admin then
+			game.print("EasyCreative: Initializing creative mode for player " .. game.players[event.player_index].name)
+			initPlayer(game.players[event.player_index])
+			initForce(game.players[event.player_index].force, true)
+		end
+	end)
+	
+	commands.add_command("refill", {"cmd.refill-help"}, function(event)
+		if game.players[event.player_index].admin then
+			local entity = game.players[event.player_index].selected
+			if entity then
+				local item = getRefilledItem(entity)
+				if item then
+					game.print("EasyCreative: Marking entity " .. entity.name .. " @ " .. entity.position.x .. ", " .. entity.position.y .. " for refill with " .. item.display)
+					table.insert(global.creative.cachedRefills, {entity = entity, item = item})
+				else
+					game.print("EasyCreative: Entity is empty!")
+				end
+			else
+				game.print("EasyCreative: No entity selected!")
+			end
+		end
+	end)
 end)
 
+--[[
 script.on_event(defines.events.on_console_command, function(event)
 	if event.command == "c" and string.find(event.parameters, "initCreative") then
 		game.print("EasyCreative: Initializing creative mode.")
@@ -88,11 +105,68 @@ script.on_event(defines.events.on_console_command, function(event)
 		initPlayer(game.players[event.player_index])
 		initForce(game.players[event.player_index].force, true)
 	end
+	if event.command == "c" and string.find(event.parameters, "refill") then
+		local entity = game.players[event.player_index].selected
+		if entity then
+			local item = getRefilledItem(entity)
+			if item then
+				game.print("EasyCreative: Marking entity " .. entity.name .. " @ " .. entity.position.x .. ", " .. entity.position.y .. " for refill with " .. item.display)
+				table.insert(global.creative.cachedRefills, {entity = entity, item = item})
+			else
+				game.print("EasyCreative: Entity is empty!")
+			end
+		else
+			game.print("EasyCreative: No entity selected!")
+		end
+	end
+end)
+--]]
+
+script.on_init(function()
+	initGlobal(true)
 end)
 
-script.on_event(defines.events.on_player_joined_game, function(event)
-	initPlayer(game.players[event.player_index])
-	initForce(game.players[event.player_index].force)
+script.on_configuration_changed(function()
+	initGlobal(true)
+end)
+
+local function convertGhostsNear(player)
+	local ghosts = player.surface.find_entities_filtered{type = {"entity-ghost", "tile-ghost"}, area = box}
+	for _,entity in pairs(ghosts) do
+		if entity.type == "entity-ghost" then
+			convertGhostToRealEntity(player, entity)
+		elseif entity.type == "tile-ghost" then
+			entity.revive()
+		end
+	end
+end
+
+script.on_event(defines.events.on_tick, function(event)
+	if event.tick%20 ~= 0 then return end
+	
+	local creative = global.creative
+	
+	if #game.players > 0 then
+		local player = game.players[math.random(1, #game.players)]
+		if player.cheat_mode then
+			convertGhostsNear(player)
+		end
+	end
+	
+	if event.tick%120 == 0 and creative.cachedRefills and #creative.cachedRefills > 0 then
+		for i,entry in ipairs(creative.cachedRefills) do
+			if entry.entity.valid then
+				local item = entry.item
+				if item.type == "item" then
+					entry.entity.insert({name = item.name, count = 1000000})
+				else
+					entry.entity.fluidbox[1] = {name = item.name, amount = 1000000}
+				end
+			else
+				table.remove(creative.cachedRefills, i)
+			end
+		end
+	end
 end)
 
 script.on_event(defines.events.on_marked_for_deconstruction, function(event)
@@ -100,16 +174,18 @@ script.on_event(defines.events.on_marked_for_deconstruction, function(event)
 	if event.player_index then
 		local player = game.players[event.player_index]
 		if player.cheat_mode then
-			local items = entity.prototype.mineable_properties.products and entity.prototype.mineable_properties.products or {}
-			for _,item in pairs(items) do
-				if item.type ~= "fluid" and player.get_item_count(item.name) == 0 then
-					player.insert({name = item.name, count = 1})
+			if entity.type ~= "item-entity" then
+				local items = entity.prototype.mineable_properties.products and entity.prototype.mineable_properties.products or {}
+				for _,item in pairs(items) do
+					if item.type ~= "fluid" and (game.item_prototypes[item.name].place_result or game.item_prototypes[item.name].place_as_tile_result) and player.get_item_count(item.name) == 0 then
+						player.insert({name = item.name, count = 1})
+					end
 				end
+				script.raise_event(defines.events.on_pre_player_mined_item, {entity=entity, player_index=event.player_index, tick=game.tick, name="on_pre_player_mined_item", creative=true, buffer = {}})
 			end
+			entity.destroy()
 		end
 	end
-	script.raise_event(defines.events.on_pre_player_mined_item, {entity=entity, player_index=event.player_index, tick=game.tick, name="on_pre_player_mined_item", creative=true, buffer = {}})
-	entity.destroy()
 end)
 
 script.on_event(defines.events.on_built_entity, function(event)
@@ -132,7 +208,7 @@ script.on_event(defines.events.on_player_mined_entity, function(event)
 	if player and player.cheat_mode then
 		for i = 1,#event.buffer do
 			local item = event.buffer[i]
-			if player.get_item_count(item.name) > 0 then
+			if player.get_item_count(item.name) > 0 or not(item.prototype.place_result or item.prototype.place_as_tile_result) then
 				event.buffer.remove({name = item.name, count = item.count})
 			end
 		end
@@ -140,5 +216,14 @@ script.on_event(defines.events.on_player_mined_entity, function(event)
 end)
 
 script.on_event(defines.events.on_technology_effects_reset, function(event)
-	initForce(event.force)
+	local flag = false
+	for _,player in pairs(event.force.players) do
+		if player.cheat_mode then
+			flag = true
+			break
+		end
+	end
+	if flag then
+		initForce(event.force)
+	end
 end)
