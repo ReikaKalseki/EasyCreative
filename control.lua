@@ -88,6 +88,45 @@ script.on_load(function()
 			end
 		end
 	end)
+	
+	commands.add_command("fillTrain", {"cmd.fill-train-help"}, function(event)
+		if game.players[event.player_index].admin then
+			local entity = game.players[event.player_index].selected
+			if entity and (entity.type == "cargo-wagon" or entity.type == "fluid-wagon" or entity.type == "locomotive") then
+				local item = event.parameter
+				if item and game.item_prototypes[item] then
+					game.print("EasyCreative: Filling train with " .. item)
+					for _,car in pairs(entity.train.carriages) do
+						if car.type == "cargo-wagon" then
+							local inv = car.get_inventory(defines.inventory.cargo_wagon)
+							inv.insert({name = item, count = 1000000})
+						end
+					end
+				else
+					game.print("EasyCreative: No item specified!")
+				end
+			else
+				game.print("EasyCreative: No train entity selected!")
+			end
+		end
+	end)
+	
+	commands.add_command("emptyTrain", {"cmd.empty-train-help"}, function(event)
+		if game.players[event.player_index].admin then
+			local entity = game.players[event.player_index].selected
+			if entity and (entity.type == "cargo-wagon" or entity.type == "fluid-wagon" or entity.type == "locomotive") then
+				game.print("EasyCreative: Clearing train")
+				for _,car in pairs(entity.train.carriages) do
+					if car.type == "cargo-wagon" then
+						local inv = car.get_inventory(defines.inventory.cargo_wagon)
+						inv.clear()
+					end
+				end
+			else
+				game.print("EasyCreative: No train entity selected!")
+			end
+		end
+	end)
 end)
 
 --[[
