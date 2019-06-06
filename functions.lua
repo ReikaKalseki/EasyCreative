@@ -3,7 +3,7 @@ function initPlayer(player)
 	player.clear_items_inside()
 	player.insert({name = "infinity-chest", count = 1})
 	player.insert({name = "electric-energy-interface", count = 1})
-	player.insert({name = game.item_prototypes["diamond-axe"] and "diamond-axe" or "steel-axe", count = 10})
+	--player.insert({name = game.item_prototypes["diamond-axe"] and "diamond-axe" or "steel-axe", count = 10})
 	player.insert({name = "power-armor-mk2", count = 1})
 end
 

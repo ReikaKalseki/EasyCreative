@@ -49,7 +49,7 @@ local function initMap()
 	preparePlayers()
 end
 
-script.on_load(function()
+local function addCommands()
 	commands.add_command("initCreative", {"cmd.init-creative-help"}, function(event)
 		if game.players[event.player_index].admin then
 			game.print("EasyCreative: Initializing creative mode.")
@@ -127,6 +127,12 @@ script.on_load(function()
 			end
 		end
 	end)
+end
+
+addCommands()
+
+script.on_load(function()
+
 end)
 
 --[[
