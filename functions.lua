@@ -1,3 +1,5 @@
+require "__DragonIndustries__.arrays"
+
 function initPlayer(player)
 	player.cheat_mode = true
 	player.clear_items_inside()
@@ -100,8 +102,8 @@ function convertGhostToRealEntity(player, ghost)
 			repl.insert({name=module, count = amt})
 		end
 		
-		script.raise_event(defines.events.on_put_item, {position=repl.position, player_index=player.index, shift_build=false, built_by_moving=false, direction=repl.direction, revive=true})
-		script.raise_event(defines.events.on_built_entity, {created_entity=repl, player_index=player.index, tick=game.tick, name="on_built_entity", revive=true})
+		--script.raise_event(defines.events.on_put_item, {position=repl.position, player_index=player.index, shift_build=false, built_by_moving=false, direction=repl.direction, revive=true})
+		--script.raise_event(defines.events.on_built_entity, {created_entity=repl, player_index=player.index, tick=game.tick, name="on_built_entity", revive=true})
 	end
 end
 
@@ -110,12 +112,24 @@ function getRefilledItem(entity)
 		return {type = "fluidbox", name = entity.fluidbox[1].name, display = "fluid: " .. entity.fluidbox[1].name}
 	end
 	local inv = entity.get_inventory(defines.inventory.cargo_wagon)
+	local items = {}
+	local keys = {}
+	local disp = ""
 	if inv then
 		for i = 1,#inv do
-			if inv[i] and inv[i].valid_for_read then
-				return {type = "item", name = inv[i].name, display = "item: " .. inv[i].name}
+			local filter = inv.supports_filters() and inv.get_filter(i) or nil
+			local add = nil
+			if filter then
+				add = filter
+			elseif inv[i] and inv[i].valid_for_read then
+				add = inv[i].name
+			end
+			if add and not listHasValue(keys, add) then
+				table.insert(items, {name = add})
+				table.insert(keys, add)
+				disp = disp .. " & item: " .. add
 			end
 		end
 	end
-	return nil
+	return {type = "item", items = items, display = disp}
 end

@@ -120,6 +120,11 @@ local function addCommands()
 					if car.type == "cargo-wagon" then
 						local inv = car.get_inventory(defines.inventory.cargo_wagon)
 						inv.clear()
+						for i,e in ipairs(global.creative.cachedRefills) do
+							if e.entity == car then
+								table.remove(global.creative.cachedRefills, i)
+							end
+						end
 					end
 				end
 			else
@@ -201,11 +206,17 @@ script.on_event(defines.events.on_tick, function(event)
 	if event.tick%120 == 0 and creative.cachedRefills and #creative.cachedRefills > 0 then
 		for i,entry in ipairs(creative.cachedRefills) do
 			if entry.entity.valid then
-				local item = entry.item
-				if item.type == "item" then
-					entry.entity.insert({name = item.name, count = 1000000})
+				if entry.item.items and entry.item.type ~= "fluidbox" then
+					for _,item in pairs(entry.item.items) do
+						entry.entity.insert({name = item.name, count = 1000000})
+					end
 				else
-					entry.entity.fluidbox[1] = {name = item.name, amount = 1000000}
+					local item = entry.item
+					if item.type == "item" then
+						entry.entity.insert({name = item.name, count = 1000000})
+					else
+						entry.entity.fluidbox[1] = {name = item.name, amount = 1000000}
+					end
 				end
 			else
 				table.remove(creative.cachedRefills, i)
@@ -226,9 +237,25 @@ script.on_event(defines.events.on_marked_for_deconstruction, function(event)
 						player.insert({name = item.name, count = 1})
 					end
 				end
-				script.raise_event(defines.events.on_pre_player_mined_item, {entity=entity, player_index=event.player_index, tick=game.tick, name="on_pre_player_mined_item", creative=true, buffer = {}})
+				--script.raise_event(defines.events.on_pre_player_mined_item, {entity=entity, player_index=event.player_index, tick=game.tick, name="on_pre_player_mined_item", creative=true, buffer = {}})
 			end
 			entity.destroy()
+		end
+	end
+end)
+
+script.on_event(defines.events.on_marked_for_upgrade, function(event)
+	local entity = event.entity
+	if event.player_index then
+		local player = game.players[event.player_index]
+		if player.cheat_mode then
+			local repl = event.target.name
+			local pos = entity.position
+			local force = entity.force
+			local dir = entity.direction
+			--entity.destroy()
+			local surf = entity.surface
+			surf.create_entity{name = repl, position = pos, force = force, direction = dir, player = player, 	fast_replace = true}
 		end
 	end
 end)
@@ -270,5 +297,23 @@ script.on_event(defines.events.on_technology_effects_reset, function(event)
 	end
 	if flag then
 		initForce(event.force)
+	end
+end)
+
+script.on_event(defines.events.on_player_selected_area, function(event)
+	if event.item == "inventory-emptier" then
+		local player = game.players[event.player_index]
+		for _,entity in pairs(event.entities) do
+			if entity.valid and entity.prototype.type ~= "character" then
+				entity.clear_items_inside()
+				if entity.fluidbox then
+					for i = 1,#entity.fluidbox do
+						entity.fluidbox[i] = nil
+					end
+				end
+			else
+				player.print("Found an invalid entity!")
+			end
+		end
 	end
 end)
