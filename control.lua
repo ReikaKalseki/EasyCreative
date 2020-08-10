@@ -244,18 +244,27 @@ script.on_event(defines.events.on_marked_for_deconstruction, function(event)
 	end
 end)
 
+function upgradeEntity(entity, player, repl)
+	local pos = entity.position
+	local force = entity.force
+	local dir = entity.direction
+	local surf = entity.surface
+	--game.print("Upgrading " .. entity.name .. " @ " .. serpent.block(entity.position) .. " to " .. repl)
+	local conn = entity.type == "underground-belt" and entity.neighbours or nil
+	local type = entity.type == "underground-belt" and entity.belt_to_ground_type or nil
+	local placed = surf.create_entity{name = repl, position = pos, force = force, direction = dir, player = player, fast_replace = true, type = type}
+	game.print("placed " .. serpent.block(placed))
+	if conn then
+		upgradeEntity(conn, player, repl)
+	end
+end
+
 script.on_event(defines.events.on_marked_for_upgrade, function(event)
 	local entity = event.entity
 	if event.player_index then
 		local player = game.players[event.player_index]
 		if player.cheat_mode then
-			local repl = event.target.name
-			local pos = entity.position
-			local force = entity.force
-			local dir = entity.direction
-			--entity.destroy()
-			local surf = entity.surface
-			surf.create_entity{name = repl, position = pos, force = force, direction = dir, player = player, 	fast_replace = true}
+			upgradeEntity(entity, player, event.target.name)
 		end
 	end
 end)
