@@ -5,7 +5,7 @@
   "author": "Reika",
   "contact": "",
   "homepage": "",
-  "factorio_version" : "0.18",
+  "factorio_version" : "1.1",
   "description": "Makes cheat_mode more like Minecraft Creative Mode, to make testing builds easier.",
   "dependencies": ["base", "DragonIndustries"]
 }

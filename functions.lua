@@ -102,8 +102,23 @@ function convertGhostToRealEntity(player, ghost)
 			repl.insert({name=module, count = amt})
 		end
 		
-		--script.raise_event(defines.events.on_put_item, {position=repl.position, player_index=player.index, shift_build=false, built_by_moving=false, direction=repl.direction, revive=true})
+		--script.raise_event(defines.events.on_pre_build, {position=repl.position, player_index=player.index, shift_build=false, built_by_moving=false, direction=repl.direction, revive=true})
 		--script.raise_event(defines.events.on_built_entity, {created_entity=repl, player_index=player.index, tick=game.tick, name="on_built_entity", revive=true})
+	end
+end
+
+function upgradeEntity(entity, player, repl)
+	local pos = entity.position
+	local force = entity.force
+	local dir = entity.direction
+	local surf = entity.surface
+	--game.print("Upgrading " .. entity.name .. " @ " .. serpent.block(entity.position) .. " to " .. repl)
+	local conn = entity.type == "underground-belt" and entity.neighbours or nil
+	local type = entity.type == "underground-belt" and entity.belt_to_ground_type or nil
+	local placed = surf.create_entity{name = repl, position = pos, force = force, direction = dir, player = player, fast_replace = true, type = type}
+	--game.print("placed " .. serpent.block(placed))
+	if conn then
+		upgradeEntity(conn, player, repl)
 	end
 end
 
