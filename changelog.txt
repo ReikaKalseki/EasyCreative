@@ -1,4 +1,27 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.102.1
+Date: Mar 27 2021
+	- Update to 1.1
+---------------------------------------------------------------------------------------------------
+Version: 1.18.18
+Date: Aug 10 2020
+	- Improved upgrade handling
+---------------------------------------------------------------------------------------------------
+Version: 1.18.15
+Date: Jul 28 2020
+	- Cleaned up refill command system
+	- Added functionality to automatically and instantly perform planned upgrades
+	- Added inventory emptying area selector
+---------------------------------------------------------------------------------------------------
+Version: 1.18.1
+Date: May 29 2020
+	- Update to 0.18
+	- Greatly expanded default creative item set
+---------------------------------------------------------------------------------------------------
+Version: 1.17.1
+Date: Mar 23 2019
+	- Update to 0.17
+---------------------------------------------------------------------------------------------------
 Version: 1.0.180
 Date: Nov 28 2018
 	- Fixed commands not being accessible the first load of a save
@@ -10,4 +33,12 @@ Date: Oct 10 2018
 Version: 1.0.148
 Date: Sep 18 2018
 	- Now increases laboratory speed as well
+---------------------------------------------------------------------------------------------------
+Version: 1.0.120
+Date: Aug 20 2018
+	- Fixed unnecessary lag spikes when rebuilding caches
+---------------------------------------------------------------------------------------------------
+Version: 1.0.115
+Date: Aug 15 2018
+	- Release
 ---------------------------------------------------------------------------------------------------
