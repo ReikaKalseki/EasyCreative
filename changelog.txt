@@ -1,0 +1,54 @@
+---------------------------------------------------------------------------------------------------
+Version: 1.101.102
+Date: Mar 27 2021
+  Misc Changes:
+    - Update to 1.1
+---------------------------------------------------------------------------------------------------
+Version: 1.018.18
+Date: Aug 10 2020
+  Misc Changes:
+    - Improved upgrade handling
+---------------------------------------------------------------------------------------------------
+Version: 1.018.15
+Date: Jul 28 2020
+  New Features:
+    - Added functionality to automatically and instantly perform planned upgrades
+    - Added inventory emptying area selector
+  Misc Changes:
+    - Cleaned up refill command system
+---------------------------------------------------------------------------------------------------
+Version: 1.018.1
+Date: May 29 2020
+  Misc Changes:
+    - Greatly expanded default creative item set
+    - Update to 0.18
+---------------------------------------------------------------------------------------------------
+Version: 1.017.1
+Date: Mar 23 2019
+  Misc Changes:
+    - Update to 0.17
+---------------------------------------------------------------------------------------------------
+Version: 1.016.180
+Date: Nov 28 2018
+  Bugfixes:
+    - Fixed commands not being accessible the first load of a save
+---------------------------------------------------------------------------------------------------
+Version: 1.016.160
+Date: Oct 10 2018
+  New Features:
+    - Added commands to fill and empty trains
+---------------------------------------------------------------------------------------------------
+Version: 1.016.148
+Date: Sep 18 2018
+  Misc Changes:
+    - Now increases laboratory speed as well
+---------------------------------------------------------------------------------------------------
+Version: 1.016.120
+Date: Aug 20 2018
+  Bugfixes:
+    - Fixed unnecessary lag spikes when rebuilding caches
+---------------------------------------------------------------------------------------------------
+Version: 1.016.115
+Date: Aug 15 2018
+  Misc Changes:
+    - Release

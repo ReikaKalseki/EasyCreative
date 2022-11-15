@@ -176,20 +176,9 @@ script.on_init(function()
 	initGlobal(true)
 end)
 
-script.on_configuration_changed(function()
+script.on_configuration_changed(function(data)
 	initGlobal(true)
 end)
-
-local function convertGhostsNear(player)
-	local ghosts = player.surface.find_entities_filtered{type = {"entity-ghost", "tile-ghost"}, area = box}
-	for _,entity in pairs(ghosts) do
-		if entity.type == "entity-ghost" then
-			convertGhostToRealEntity(player, entity)
-		elseif entity.type == "tile-ghost" then
-			entity.revive()
-		end
-	end
-end
 
 script.on_event(defines.events.on_tick, function(event)
 	if event.tick%20 ~= 0 then return end
@@ -199,7 +188,7 @@ script.on_event(defines.events.on_tick, function(event)
 	if #game.players > 0 then
 		local player = game.players[math.random(1, #game.players)]
 		if player.cheat_mode then
-			convertGhostsNear(player)
+			convertGhostsNear(player, getRadiusAABB(player.character, 100))
 		end
 	end
 	
