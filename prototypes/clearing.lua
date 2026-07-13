@@ -1,30 +1,30 @@
-data:extend({
+require "__DragonIndustries__.registration"
 
-  {
-    type = "selection-tool",
+addDerivative("deconstruction-item", "deconstruction-planner", {
     name = "inventory-emptier",
     icon = "__EasyCreative__/graphics/icons/emptier.png",
     icon_size = 32,
-    stack_size = 1,
-    subgroup = "tool",
     order = "c[automated-construction]-d[emptier]",
-    flags = {},
-    selection_color = {r = 1.0, g = 0.2, b = 1.0, a = 0.3},
-    alt_selection_color = {r = 0.2, g = 0.8, b = 0.3, a = 0.3},
-    selection_mode = {"any-entity"},
-    alt_selection_mode = {"any-entity"},
-    selection_cursor_box_type = "entity",
-    alt_selection_cursor_box_type = "entity"
-    
-  },
-  {
-    type = "recipe",
-    name = "inventory-emptier",
-    enabled = true,
-    energy_required = 0.1,
-    ingredients =
-    {
+    select = {
+      border_color = {255, 202, 3, 77},
+      mode = {"any-entity"},
+      cursor_box_type = "entity",
     },
-    result = "inventory-emptier"
-  }
+    alt_select = {
+      border_color = {255, 182, 2, 0},
+      mode = {"any-entity"},
+      cursor_box_type = "entity",
+    },
+    super_forced_select = "nil",
+    reverse_select = {
+      border_color = {255, 204, 51, 0},
+      mode = {"any-entity"},
+      cursor_box_type = "entity",
+    },
+    alt_reverse_select = {
+      border_color = {255, 204, 51, 0},
+      mode = {"any-entity"},
+      cursor_box_type = "entity",
+    },
+    tile_filter_count = "nil",
 })

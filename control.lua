@@ -1,21 +1,10 @@
-require "config"
 require "functions"
 
-function initGlobal(force)
-	if not global.creative then
-		global.creative = {}
-	end
-	
-	if not global.creative.cachedRefills then
-		global.creative.cachedRefills = {}
-	end
-end
+require "__DragonIndustries__.boxes"
 
-initGlobal(false)
-
-local function prepareTerrain()
-	local r = Config.radius
-	game.forces.neutral.chart(game.surfaces.nauvis, {{-r, -r}, {r, r}}) --generate the area
+local function prepareTerrain(surface)
+	local r = math.floor(settings.startup["creative-radius"].value)
+	game.forces.neutral.chart(surface, {{-r, -r}, {r, r}}) --generate the area
 	
 	for _,e in pairs(game.surfaces[1].find_entities_filtered{type = {"turret", "resource", "unit", "unit-spawner", "optimized-decorative", "simple-entity", "tree", "cliff"}}) do
 		e.destroy()
@@ -30,8 +19,7 @@ local function prepareTerrain()
 	game.surfaces[1].set_tiles(tiles)
 	
 	for _,force in pairs(game.forces) do
-		local r = Config.radius
-		force.chart(game.surfaces.nauvis, {{-r, -r}, {r, r}})
+		force.chart(surface, {{-r, -r}, {r, r}})
 	end
 end
 
@@ -44,8 +32,8 @@ local function preparePlayers()
 	end
 end
 
-local function initMap()
-	prepareTerrain()
+local function initMap(surface)
+	prepareTerrain(surface)
 	preparePlayers()
 end
 
@@ -53,7 +41,7 @@ local function addCommands()
 	commands.add_command("initCreative", {"cmd.init-creative-help"}, function(event)
 		if game.players[event.player_index].admin then
 			game.print("EasyCreative: Initializing creative mode.")
-			initMap()
+			initMap(game.players[event.player_index].surface)
 		end
 	end)
 	
@@ -71,67 +59,6 @@ local function addCommands()
 			initForce(game.players[event.player_index].force, true)
 		end
 	end)
-	
-	commands.add_command("refill", {"cmd.refill-help"}, function(event)
-		if game.players[event.player_index].admin then
-			local entity = game.players[event.player_index].selected
-			if entity then
-				local item = getRefilledItem(entity)
-				if item then
-					game.print("EasyCreative: Marking entity " .. entity.name .. " @ " .. entity.position.x .. ", " .. entity.position.y .. " for refill with " .. item.display)
-					table.insert(global.creative.cachedRefills, {entity = entity, item = item})
-				else
-					game.print("EasyCreative: Entity is empty!")
-				end
-			else
-				game.print("EasyCreative: No entity selected!")
-			end
-		end
-	end)
-	
-	commands.add_command("fillTrain", {"cmd.fill-train-help"}, function(event)
-		if game.players[event.player_index].admin then
-			local entity = game.players[event.player_index].selected
-			if entity and (entity.type == "cargo-wagon" or entity.type == "fluid-wagon" or entity.type == "locomotive") then
-				local item = event.parameter
-				if item and game.item_prototypes[item] then
-					game.print("EasyCreative: Filling train with " .. item)
-					for _,car in pairs(entity.train.carriages) do
-						if car.type == "cargo-wagon" then
-							local inv = car.get_inventory(defines.inventory.cargo_wagon)
-							inv.insert({name = item, count = 1000000})
-						end
-					end
-				else
-					game.print("EasyCreative: No item specified!")
-				end
-			else
-				game.print("EasyCreative: No train entity selected!")
-			end
-		end
-	end)
-	
-	commands.add_command("emptyTrain", {"cmd.empty-train-help"}, function(event)
-		if game.players[event.player_index].admin then
-			local entity = game.players[event.player_index].selected
-			if entity and (entity.type == "cargo-wagon" or entity.type == "fluid-wagon" or entity.type == "locomotive") then
-				game.print("EasyCreative: Clearing train")
-				for _,car in pairs(entity.train.carriages) do
-					if car.type == "cargo-wagon" then
-						local inv = car.get_inventory(defines.inventory.cargo_wagon)
-						inv.clear()
-						for i,e in ipairs(global.creative.cachedRefills) do
-							if e.entity == car then
-								table.remove(global.creative.cachedRefills, i)
-							end
-						end
-					end
-				end
-			else
-				game.print("EasyCreative: No train entity selected!")
-			end
-		end
-	end)
 end
 
 addCommands()
@@ -140,76 +67,11 @@ script.on_load(function()
 
 end)
 
---[[
-script.on_event(defines.events.on_console_command, function(event)
-	if event.command == "c" and string.find(event.parameters, "initCreative") then
-		game.print("EasyCreative: Initializing creative mode.")
-		initMap()
-	end
-	if event.command == "c" and string.find(event.parameters, "initMap") then
-		game.print("EasyCreative: Preparing creative terrain.")
-		prepareTerrain()
-	end
-	if event.command == "c" and event.player_index and string.find(event.parameters, "initPlayer") then
-		game.print("EasyCreative: Initializing creative mode for player " .. game.players[event.player_index].name)
-		initPlayer(game.players[event.player_index])
-		initForce(game.players[event.player_index].force, true)
-	end
-	if event.command == "c" and string.find(event.parameters, "refill") then
-		local entity = game.players[event.player_index].selected
-		if entity then
-			local item = getRefilledItem(entity)
-			if item then
-				game.print("EasyCreative: Marking entity " .. entity.name .. " @ " .. entity.position.x .. ", " .. entity.position.y .. " for refill with " .. item.display)
-				table.insert(global.creative.cachedRefills, {entity = entity, item = item})
-			else
-				game.print("EasyCreative: Entity is empty!")
-			end
-		else
-			game.print("EasyCreative: No entity selected!")
-		end
-	end
-end)
---]]
-
-script.on_init(function()
-	initGlobal(true)
-end)
-
-script.on_configuration_changed(function(data)
-	initGlobal(true)
-end)
-
-script.on_event(defines.events.on_tick, function(event)
-	if event.tick%20 ~= 0 then return end
-	
-	local creative = global.creative
-	
+script.on_nth_tick(20, function(data)	
 	if #game.players > 0 then
 		local player = game.players[math.random(1, #game.players)]
-		if player.cheat_mode then
-			convertGhostsNear(player, getRadiusAABB(player.character, 100))
-		end
-	end
-	
-	if event.tick%120 == 0 and creative.cachedRefills and #creative.cachedRefills > 0 then
-		for i,entry in ipairs(creative.cachedRefills) do
-			if entry.entity.valid then
-				if entry.item.items and entry.item.type ~= "fluidbox" then
-					for _,item in pairs(entry.item.items) do
-						entry.entity.insert({name = item.name, count = 1000000})
-					end
-				else
-					local item = entry.item
-					if item.type == "item" then
-						entry.entity.insert({name = item.name, count = 1000000})
-					else
-						entry.entity.fluidbox[1] = {name = item.name, amount = 1000000}
-					end
-				end
-			else
-				table.remove(creative.cachedRefills, i)
-			end
+		if player.cheat_mode and player.character and player.character.valid then
+			convertGhostsNear(player, 100)
 		end
 	end
 end)
@@ -222,11 +84,10 @@ script.on_event(defines.events.on_marked_for_deconstruction, function(event)
 			if entity.type ~= "item-entity" then
 				local items = entity.prototype.mineable_properties.products and entity.prototype.mineable_properties.products or {}
 				for _,item in pairs(items) do
-					if item.type ~= "fluid" and (game.item_prototypes[item.name].place_result or game.item_prototypes[item.name].place_as_tile_result) and player.get_item_count(item.name) == 0 then
+					if item.type ~= "fluid" and (prototypes.item[item.name].place_result or prototypes.item[item.name].place_as_tile_result) and player.get_item_count(item.name) == 0 then
 						player.insert({name = item.name, count = 1})
 					end
 				end
-				--script.raise_event(defines.events.on_pre_player_mined_item, {entity=entity, player_index=event.player_index, tick=game.tick, name="on_pre_player_mined_item", creative=true, buffer = {}})
 			end
 			entity.destroy()
 		end
@@ -244,15 +105,13 @@ script.on_event(defines.events.on_marked_for_upgrade, function(event)
 end)
 
 script.on_event(defines.events.on_built_entity, function(event)
-	local entity = event.created_entity
+	local entity = event.entity
 	local player = game.players[event.player_index]
 	if player.cheat_mode then
 		if entity.type == "entity-ghost" then
-			convertGhostToRealEntity(player, entity)
+			convertGhostToRealEntity(entity)
 		elseif entity.type == "tile-ghost" then
 			entity.revive()
-		elseif event.stack and event.stack.valid_for_read then --is nil for blueprints
-			player.insert({name = event.stack.name, count = 1})
 		end
 	end
 end)
